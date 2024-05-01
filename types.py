@@ -35,8 +35,7 @@ def get_person_info(person: Person) -> str:
 
 person_1: Person = Person(109387, 26, "Eugene", "eugene@gmail.com")
 # print(get_person_info(person_1), end= "\n-------------------------------------------\n")
-
-
+# print(Person.__init__.__annotations__)
 from dataclasses import dataclass
 
 @dataclass(frozen= True)
@@ -58,6 +57,50 @@ ether_1 = EthernetProtocolStructure(7, 1, 6, 6, 2, "46 - 1500", 4)
 """ Below assignment won't work because of the instance's frozen state."""
 # ether_1.data_and_padding = "1000"
 # print(ether_1)
+
+import requests
+
+request = requests.get("http://api.open-notify.org/iss-now.json")
+
+if request.status_code == 200:
+    print(f"Request successful\n" 
+          f"{request.text}.")
+    coordinates = request.json().get('iss_position')
+    formatted_coordinates = f"{coordinates['longitude']}%2C{coordinates['latitude']}"
+    map_url = f"https://yandex.com/maps/?||={formatted_coordinates}&z=10"
+    print(map_url)
+else:
+    print(f"Response code - {request.status_code}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
