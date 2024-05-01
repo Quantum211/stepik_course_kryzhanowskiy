@@ -73,9 +73,8 @@ else:
     print(f"Response code - {request.status_code}")
 
 
-
-
-
+response_number43 = requests.get("http://numbersapi.com/43?json")
+print(response_number43.json().get('text'))
 
 
 
