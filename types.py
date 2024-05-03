@@ -76,7 +76,42 @@ else:
 response_number43 = requests.get("http://numbersapi.com/43?json")
 print(response_number43.json().get('text'))
 
+" ---------------------------------------------------------------------- "
+import json
+import time
 
+url = "https://api.telegram.org/bot"
+token = "7189166713:AAFplUTZndRgivPEkLAj9nQFfd0bHw2bibI"
+# chat_id = "1600526965"
+offset: int = -5
+counter: int = 0
+max_limit: int = 100
+text = "Update has been processed. Thank you"
+
+response_dict = requests.get(f"{url + token}/getUpdates").json()
+print(json.dumps(response_dict, indent= 2, sort_keys= True))
+
+print(type(response_dict['result']))
+
+while counter < max_limit:
+    print(f"Attempt: {counter}")
+
+    response = requests.get(f"{url + token}/getUpdates?offset={offset + 1}&limit=100").json()
+
+    if response['result']:
+        if offset <= -1:
+            for result in response['result']:
+                offset += 1
+                chat_id: int = result['message']['chat']['id']
+                bot_message = requests.get(f"{url + token}/sendMessage?chat_id={chat_id}&text={text}")
+        else:
+            for result in response['result']:
+                offset: int = result['update_id']
+                chat_id: int = result['message']['chat']['id']
+                bot_message = requests.get(f"{url + token}/sendMessage?chat_id={chat_id}&text="
+                                           f"{text + result['message']['text']}")
+    counter += 1
+    time.sleep(1)
 
 
 
