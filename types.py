@@ -164,21 +164,29 @@ import time
 url = "https://api.telegram.org/bot"
 token = "7189166713:AAFplUTZndRgivPEkLAj9nQFfd0bHw2bibI"
 counter = 0
-
+offset = -3
 
 while counter < 100:
     start_time = time.time()
 
-    response = requests.get(f"{url + token}/getUpdates")
-    if response.status_code == 200:
-        print(response.json())
+
+    def was_update() -> None:
+        print("Was update")
+
+    response = requests.get(f"{url + token}/getUpdates?timeout=100&offset={offset + 1}").json()
+    if response['result']:
+        for result in response['result']:
+            print(str(result['update_id']) + "\n" + result['message']['text'])
+            offset = result['update_id']
+
 
     end_time = time.time()
-    print(f"It took {end_time - start_time} seconds to implement this iteration"
+    print(f"It took {end_time - start_time} seconds to implement this iteration\n"
           f"Counter: {counter}")
 
     time.sleep(3)
-    counter += 1
+
+
 
 
 
