@@ -116,45 +116,69 @@ print(response_number43.json().get('text'))
 
 " ---------------------------------------------------------------------------------------------------- "
 
+# import time
+# import json
+#
+# url: str = "https://api.telegram.org/bot"
+# token: str = "7189166713:AAFplUTZndRgivPEkLAj9nQFfd0bHw2bibI"
+# max_number: int = 100
+# counter: int = 0
+# offset: int = -1
+#
+# kitties_api: str = "https://api.thecatapi.com/v1/images/search"
+#
+# kitties_api_response = requests.get(f"{kitties_api}").json()[0]['url']
+# foxies_response: str = "https://randomfox.ca/floof/"
+# # print(kitties_api_response)
+#
+# while counter < max_number:
+#     response = requests.get(f"{url + token}/getUpdates?offset={offset + 1}&limit=100").json()
+#
+#     if response['result']:
+#         for result in response['result']:
+#             # kitties_api_response = requests.get(f"{kitties_api}")
+#             print("TEST")
+#             foxies_api_response = requests.get(f"{foxies_response}")
+#             print(foxies_api_response)
+#             chat_id = result['message']['chat']['id']
+#             offset = result['update_id']
+#
+#             print("Below is a response code")
+#             print(foxies_api_response.status_code)
+#             if foxies_api_response.status_code == 200:
+#                 photo = requests.get(f"{url + token}/sendPhoto?chat_id={chat_id}&photo={foxies_api_response.json()['image']}")
+#             else:
+#                 requests.get(f"{url + token}/sendMessage?chat_id={chat_id}&text=You should have received a photo instead of this message :(")
+#
+#     print(offset)
+#     print(counter)
+#     counter += 1
+#     time.sleep(1)
+
+
+" ------------------------------------------------------------------------------------------------------------- "
+
 import time
-import json
 
-url: str = "https://api.telegram.org/bot"
-token: str = "7189166713:AAFplUTZndRgivPEkLAj9nQFfd0bHw2bibI"
-max_number: int = 100
-counter: int = 0
-offset: int = -1
 
-kitties_api: str = "https://api.thecatapi.com/v1/images/search"
+url = "https://api.telegram.org/bot"
+token = "7189166713:AAFplUTZndRgivPEkLAj9nQFfd0bHw2bibI"
+counter = 0
 
-kitties_api_response = requests.get(f"{kitties_api}").json()[0]['url']
-foxies_response: str = "https://randomfox.ca/floof/"
-# print(kitties_api_response)
 
-while counter < max_number:
-    response = requests.get(f"{url + token}/getUpdates?offset={offset + 1}&limit=100").json()
+while counter < 100:
+    start_time = time.time()
 
-    if response['result']:
-        for result in response['result']:
-            # kitties_api_response = requests.get(f"{kitties_api}")
-            print("TEST")
-            foxies_api_response = requests.get(f"{foxies_response}")
-            print(foxies_api_response)
-            chat_id = result['message']['chat']['id']
-            offset = result['update_id']
+    response = requests.get(f"{url + token}/getUpdates")
+    if response.status_code == 200:
+        print(response.json())
 
-            print("Below is a response code")
-            print(foxies_api_response.status_code)
-            if foxies_api_response.status_code == 200:
-                photo = requests.get(f"{url + token}/sendPhoto?chat_id={chat_id}&photo={foxies_api_response.json()['image']}")
-            else:
-                requests.get(f"{url + token}/sendMessage?chat_id={chat_id}&text=You should have received a photo instead of this message :(")
+    end_time = time.time()
+    print(f"It took {end_time - start_time} seconds to implement this iteration"
+          f"Counter: {counter}")
 
-    print(offset)
-    print(counter)
+    time.sleep(3)
     counter += 1
-    time.sleep(1)
-
 
 
 
