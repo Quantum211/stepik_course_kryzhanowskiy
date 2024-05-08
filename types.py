@@ -60,21 +60,21 @@ ether_1 = EthernetProtocolStructure(7, 1, 6, 6, 2, "46 - 1500", 4)
 
 import requests
 
-request = requests.get("http://api.open-notify.org/iss-now.json")
-
-if request.status_code == 200:
-    print(f"Request successful\n" 
-          f"{request.text}.")
-    coordinates = request.json().get('iss_position')
-    formatted_coordinates = f"{coordinates['longitude']}%2C{coordinates['latitude']}"
-    map_url = f"https://yandex.com/maps/?||={formatted_coordinates}&z=10"
-    print(map_url)
-else:
-    print(f"Response code - {request.status_code}")
-
-
-response_number43 = requests.get("http://numbersapi.com/43?json")
-print(response_number43.json().get('text'))
+# request = requests.get("http://api.open-notify.org/iss-now.json")
+#
+# if request.status_code == 200:
+#     print(f"Request successful\n"
+#           f"{request.text}.")
+#     coordinates = request.json().get('iss_position')
+#     formatted_coordinates = f"{coordinates['longitude']}%2C{coordinates['latitude']}"
+#     map_url = f"https://yandex.com/maps/?||={formatted_coordinates}&z=10"
+#     print(map_url)
+# else:
+#     print(f"Response code - {request.status_code}")
+#
+#
+# response_number43 = requests.get("http://numbersapi.com/43?json")
+# print(response_number43.json().get('text'))
 
 " ---------------------------------------------------------------------- "
 # import json
@@ -158,39 +158,102 @@ print(response_number43.json().get('text'))
 
 " ------------------------------------------------------------------------------------------------------------- "
 
-import time
+# import time
+#
+#
+# url = "https://api.telegram.org/bot"
+# token = "7189166713:AAFplUTZndRgivPEkLAj9nQFfd0bHw2bibI"
+# counter = 0
+# offset = -3
+#
+# while counter < 100:
+#     start_time = time.time()
+#
+#
+#     def was_update() -> None:
+#         print("Was update")
+#
+#     response = requests.get(f"{url + token}/getUpdates?timeout=-15.22&offset={offset + 1}").json()
+#     if response['result']:
+#         for result in response['result']:
+#             print(str(result['update_id']) + "\n" + result['message']['text'])
+#             offset = result['update_id']
+#
+#
+#     end_time = time.time()
+#     print(f"It took {end_time - start_time} seconds to implement this iteration\n"
+#           f"Counter: {counter}")
+#
+#     time.sleep(3)
+
+" ------------------------------------------------------------------------------------------------- "
+# Echo - bot
+
+from aiogram import Bot, Dispatcher
+from aiogram.filters import Command, Filter
+from aiogram.types import Message
+from aiogram.methods import SendMessage
 
 
-url = "https://api.telegram.org/bot"
-token = "7189166713:AAFplUTZndRgivPEkLAj9nQFfd0bHw2bibI"
-counter = 0
-offset = -3
+cat_api: str = "https://api.thecatapi.com/v1/images/search"
+fox_api: str = "https://randomfox.ca/floof/"
 
-while counter < 100:
-    start_time = time.time()
-
-
-    def was_update() -> None:
-        print("Was update")
-
-    response = requests.get(f"{url + token}/getUpdates?timeout=100&offset={offset + 1}").json()
-    if response['result']:
-        for result in response['result']:
-            print(str(result['update_id']) + "\n" + result['message']['text'])
-            offset = result['update_id']
+BOT_TOKEN = "7189166713:AAFplUTZndRgivPEkLAj9nQFfd0bHw2bibI"
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher()
 
 
-    end_time = time.time()
-    print(f"It took {end_time - start_time} seconds to implement this iteration\n"
-          f"Counter: {counter}")
+@dp.message(Command(commands=['start']))
+async def process_start_command(message: Message) -> Message:
+    answer_return = await message.answer(text=f"Hello, {message.chat.first_name} {message.chat.last_name}! Pleasure to meet you.\n"
+                                              "This is the start of our conversation. Enter:\n"
+                                              "'/help' - to get help")
+    print(answer_return)
+    print(type(answer_return))
+    return answer_return
 
-    time.sleep(3)
+@dp.message(Command(commands=['help']))
+async def process_help_command(message: Message):
+    await message.answer(text=f"'help':\n"
+                         f"This bot will reply/echo with the same message you have sent to the chat.")
 
+@dp.message(Command(commands=["fox", "Fox", 'foxie', "Foxie", "Лис", "лис", "Лиса", "лиса", "Лисенок", "лисенок"]))
+async def send_fox_photo(message: Message):
+    fox_api_response = requests.get(fox_api)
+    print(fox_api_response)
+    if fox_api_response.status_code == 200:
+        await message.answer_photo(
+            photo= fox_api_response.json()['image'],
+            caption= "Хочу кушать < '!' >"
+        )
+    else:
+        await message.answer(
+            text=f"To my deep regret, we had an unexpected error in the internetwork :(\n\nCome again and later for another attempt :=)"
+        )
 
+@dp.message(Command(commands=["Cat", "cat", "kitten", "Kitten", "Kittie", "kittie", "Meow", "meow",
+                              "Кот", "кот", "Кошка", "кошка", "Котенок", "котенок", "Кошак", "кошак", "Кошара", "кошара",
+                              "Мур", "мур", "Мяу", "мяу"]))
+async def send_cat_photo(message: Message):
+    cat_api_response = requests.get(cat_api)
+    if cat_api_response.status_code == 200:
+        await message.answer_photo(
+            photo= cat_api_response.json()[0]['url'],
+            caption= "Мяу (=◑ᆺ◐=)"
+        )
+    else:
+        await message.answer(
+            text= "No response from the API :(\nCome back later for another attempt ^_^"
+        )
 
+@dp.message()
+async def send_echo(message: Message):
+    await message.reply(
+        text= f"{message.text}"
+    )
 
-
-
+if __name__ == "__main__":
+    dp.run_polling(bot)
 
 
 
