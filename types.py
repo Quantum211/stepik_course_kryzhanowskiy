@@ -195,66 +195,121 @@ from aiogram.types import Message
 from aiogram.methods import SendMessage
 
 
+# cat_api: str = "https://api.thecatapi.com/v1/images/search"
+# fox_api: str = "https://randomfox.ca/floof/"
+#
+# BOT_TOKEN = "7189166713:AAFplUTZndRgivPEkLAj9nQFfd0bHw2bibI"
+# bot = Bot(token=BOT_TOKEN)
+# dp = Dispatcher()
+
+
+# @dp.message(Command(commands=['start']))
+# async def process_start_command(message: Message) -> Message:
+#     answer_return = await message.answer(text=f"Hello, {message.chat.first_name} {message.chat.last_name}! Pleasure to meet you.\n"
+#                                               "This is the start of our conversation. Enter:\n"
+#                                               "'/help' - to get help")
+#     print(answer_return)
+#     print(type(answer_return))
+#     return answer_return
+#
+# @dp.message(Command(commands=['help']))
+# async def process_help_command(message: Message):
+#     await message.answer(text=f"'help':\n"
+#                          f"This bot will reply/echo with the same message you have sent to the chat.")
+#
+# @dp.message(Command(commands=["fox", "Fox", 'foxie', "Foxie", "Лис", "лис", "Лиса", "лиса", "Лисенок", "лисенок"]))
+# async def send_fox_photo(message: Message):
+#     fox_api_response = requests.get(fox_api)
+#     print(fox_api_response)
+#     if fox_api_response.status_code == 200:
+#         await message.answer_photo(
+#             photo= fox_api_response.json()['image'],
+#             caption= "Хочу кушать < '!' >"
+#         )
+#     else:
+#         await message.answer(
+#             text=f"To my deep regret, we had an unexpected error in the internetwork :(\n\nCome again and later for another attempt :=)"
+#         )
+#
+# @dp.message(Command(commands=["Cat", "cat", "kitten", "Kitten", "Kittie", "kittie", "Meow", "meow",
+#                               "Кот", "кот", "Кошка", "кошка", "Котенок", "котенок", "Кошак", "кошак", "Кошара", "кошара",
+#                               "Мур", "мур", "Мяу", "мяу"]))
+# async def send_cat_photo(message: Message):
+#     cat_api_response = requests.get(cat_api)
+#     if cat_api_response.status_code == 200:
+#         await message.answer_photo(
+#             photo= cat_api_response.json()[0]['url'],
+#             caption= "Мяу (=◑ᆺ◐=)"
+#         )
+#     else:
+#         await message.answer(
+#             text= "No response from the API :(\nCome back later for another attempt ^_^"
+#         )
+#
+# @dp.message()
+# async def send_echo(message: Message):
+#     await message.reply(
+#         text= f"{message.text}"
+#     )
+
+# if __name__ == "__main__":
+#     dp.run_polling(bot)
+
+" ------------------------------------------------------------------------------------ "
+
+from aiogram import Dispatcher, Bot
+from aiogram.types import Message
+from aiogram.filters import Command
+
 cat_api: str = "https://api.thecatapi.com/v1/images/search"
 fox_api: str = "https://randomfox.ca/floof/"
 
 BOT_TOKEN = "7189166713:AAFplUTZndRgivPEkLAj9nQFfd0bHw2bibI"
+
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 
-@dp.message(Command(commands=['start']))
-async def process_start_command(message: Message) -> Message:
-    answer_return = await message.answer(text=f"Hello, {message.chat.first_name} {message.chat.last_name}! Pleasure to meet you.\n"
-                                              "This is the start of our conversation. Enter:\n"
-                                              "'/help' - to get help")
-    print(answer_return)
-    print(type(answer_return))
-    return answer_return
-
-@dp.message(Command(commands=['help']))
-async def process_help_command(message: Message):
-    await message.answer(text=f"'help':\n"
-                         f"This bot will reply/echo with the same message you have sent to the chat.")
-
-@dp.message(Command(commands=["fox", "Fox", 'foxie', "Foxie", "Лис", "лис", "Лиса", "лиса", "Лисенок", "лисенок"]))
-async def send_fox_photo(message: Message):
-    fox_api_response = requests.get(fox_api)
-    print(fox_api_response)
-    if fox_api_response.status_code == 200:
-        await message.answer_photo(
-            photo= fox_api_response.json()['image'],
-            caption= "Хочу кушать < '!' >"
-        )
-    else:
-        await message.answer(
-            text=f"To my deep regret, we had an unexpected error in the internetwork :(\n\nCome again and later for another attempt :=)"
-        )
-
-@dp.message(Command(commands=["Cat", "cat", "kitten", "Kitten", "Kittie", "kittie", "Meow", "meow",
-                              "Кот", "кот", "Кошка", "кошка", "Котенок", "котенок", "Кошак", "кошак", "Кошара", "кошара",
-                              "Мур", "мур", "Мяу", "мяу"]))
-async def send_cat_photo(message: Message):
-    cat_api_response = requests.get(cat_api)
-    if cat_api_response.status_code == 200:
-        await message.answer_photo(
-            photo= cat_api_response.json()[0]['url'],
-            caption= "Мяу (=◑ᆺ◐=)"
-        )
-    else:
-        await message.answer(
-            text= "No response from the API :(\nCome back later for another attempt ^_^"
-        )
-
-@dp.message()
-async def send_echo(message: Message):
-    await message.reply(
-        text= f"{message.text}"
+# Start handler
+async def process_start_command(message: Message):
+    await message.answer(
+        text=f"Hi, {message.from_user.first_name } {message.from_user.last_name}!\n"
+             f"That's the start of our wonderful conversation. Please enter:\n"
+             f"'/help' - to get help"
     )
+
+async def process_help_command(message: Message):
+    await message.reply(
+        text= f"This bot echoes your commands resembling you a feeling of what having a parrot is like"
+    )
+
+
+async def prosess_fox_command(message: Message):
+    fox_api_response = requests.get(fox_api).json()['image']
+    await message.answer_photo(
+        photo= f"{fox_api_response}"
+    )
+
+async def process_cat_command(message: Message):
+    cat_api_response = requests.get(cat_api).json()[0]['url']
+    await message.answer_photo(
+        photo=f"{cat_api_response}"
+    )
+
+async def process_echo(message: Message):
+    await message.reply(
+        text= message.text
+    )
+
+"Registering all the filters for the function handlers"
+dp.message.register(process_start_command, Command(commands=["start"]))
+dp.message.register(process_help_command, Command(commands=["help"]))
+dp.message.register(prosess_fox_command, Command(commands=["fox"]))
+dp.message.register(process_cat_command, Command(commands=["cat"]))
+dp.message.register(process_echo    )
 
 if __name__ == "__main__":
     dp.run_polling(bot)
-
 
 
 
