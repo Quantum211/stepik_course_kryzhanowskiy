@@ -256,9 +256,11 @@ from aiogram.methods import SendMessage
 #     dp.run_polling(bot)
 
 " ------------------------------------------------------------------------------------ "
+import json
 
-from aiogram import Dispatcher, Bot
-from aiogram.types import Message
+
+from aiogram import Dispatcher, Bot, F
+from aiogram.types import Message, ContentType
 from aiogram.filters import Command
 
 cat_api: str = "https://api.thecatapi.com/v1/images/search"
@@ -285,28 +287,104 @@ async def process_help_command(message: Message):
 
 
 async def prosess_fox_command(message: Message):
+    print("Audio\n", message)
     fox_api_response = requests.get(fox_api).json()['image']
     await message.answer_photo(
         photo= f"{fox_api_response}"
     )
 
 async def process_cat_command(message: Message):
+    print("Audio\n", message)
     cat_api_response = requests.get(cat_api).json()[0]['url']
     await message.answer_photo(
         photo=f"{cat_api_response}"
     )
 
-async def process_echo(message: Message):
-    await message.reply(
-        text= message.text
+async def echo_photo(message: Message):
+    print("Audio\n", message)
+    photo = message.photo[0]
+    await message.reply_photo(
+        photo= photo.file_id,
+        caption= f"First photo, size: {photo.file_size}"
     )
+    # await message.reply_photo(
+    #     photo= photo_2.file_id,
+    #     caption= f"Last photo, size: {photo_2.file_size}"
+    # )
+
+
+async def process_voice(message: Message):
+    print("Audio\n", message, end="\n--------------------------------\n")
+    await message.reply_voice(
+        voice= message.voice.file_id,
+        caption= f"File size: {message.voice.file_size}, duration: {message.voice.duration}"
+    )
+
+async def process_sticker(message: Message):
+    print("Sticker", message, sep="\n")
+    await message.reply_sticker(
+        sticker=message.sticker.file_id
+    )
+
+import datetime
+
+async def process_animation(message: Message):
+    print("Animation")
+    print(message)
+    await message.reply_animation(
+        animation= message.animation.file_id
+    )
+
+async def process_document(message: Message):
+    print("Document")
+    print(message.document)
+    await message.reply_document(
+        document= message.document.file_id
+    )
+
+
+async def process_audio(message: Message):
+    print("Audio\n", message.audio)
+    await message.reply_audio(
+        audio= message.audio.file_id,
+        caption= f"File name: {message.audio.file_name}\n"
+                 f"File size: {message.audio.file_size}"
+    )
+
+async def process_video(message: Message):
+    print("Video\n", message.video)
+    await message.reply_video(
+        video= message.video.file_id,
+        caption= f"Video name: {message.video.file_name}\n"
+                 f"Size: {message.video.file_size}"
+    )
+
+
+async def echo_text(message: Message):
+    print("Echo_text\n", message)
+    await message.reply(
+        text= message.text,
+        caption= f"Book: {message.document.file_name}\n"
+                 f"Size: {message.document.file_size}",
+    )
+
+
 
 "Registering all the filters for the function handlers"
 dp.message.register(process_start_command, Command(commands=["start"]))
 dp.message.register(process_help_command, Command(commands=["help"]))
 dp.message.register(prosess_fox_command, Command(commands=["fox"]))
 dp.message.register(process_cat_command, Command(commands=["cat"]))
-dp.message.register(process_echo    )
+dp.message.register(echo_photo, F.photo)
+dp.message.register(process_voice, F.voice)
+dp.message.register(process_sticker, F.sticker)
+dp.message.register(process_animation, F.animation)
+dp.message.register(process_document, F.document)
+dp.message.register(process_audio, F.audio)
+dp.message.register(process_video, F.video)
+dp.message.register(echo_text)
+
+
 
 if __name__ == "__main__":
     dp.run_polling(bot)
