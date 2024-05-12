@@ -287,21 +287,26 @@ async def process_help_command(message: Message):
 
 
 async def prosess_fox_command(message: Message):
-    print("Audio\n", message)
+    print("Fox\n", message)
     fox_api_response = requests.get(fox_api).json()['image']
     await message.answer_photo(
-        photo= f"{fox_api_response}"
+        photo= f"{fox_api_response}",
+        caption= f"Хочу кушать < '!' >\n"
     )
 
 async def process_cat_command(message: Message):
-    print("Audio\n", message)
+    print("Cat\n", message)
     cat_api_response = requests.get(cat_api).json()[0]['url']
-    await message.answer_photo(
-        photo=f"{cat_api_response}"
+    cat = await message.answer_photo(
+        photo=f"{cat_api_response}",
+        caption= f"Мяу (=◑ᆺ◐=)\n"
     )
+    print(cat)
+
+
 
 async def echo_photo(message: Message):
-    print("Audio\n", message)
+    print("Photo\n", message)
     photo = message.photo[0]
     await message.reply_photo(
         photo= photo.file_id,
@@ -314,7 +319,7 @@ async def echo_photo(message: Message):
 
 
 async def process_voice(message: Message):
-    print("Audio\n", message, end="\n--------------------------------\n")
+    print("Voice\n", message, end="\n--------------------------------\n")
     await message.reply_voice(
         voice= message.voice.file_id,
         caption= f"File size: {message.voice.file_size}, duration: {message.voice.duration}"
@@ -369,6 +374,13 @@ async def echo_text(message: Message):
     )
 
 
+# async def echo_message(message: Message):
+#     print(f"send_copy message")
+#     print(message)
+#     await message.send_copy(
+#         chat_id= message.chat.id,
+#         reply_to_message_id= message.message_id
+#     )
 
 "Registering all the filters for the function handlers"
 dp.message.register(process_start_command, Command(commands=["start"]))
@@ -383,6 +395,7 @@ dp.message.register(process_document, F.document)
 dp.message.register(process_audio, F.audio)
 dp.message.register(process_video, F.video)
 dp.message.register(echo_text)
+# dp.message.register(echo_message)
 
 
 
