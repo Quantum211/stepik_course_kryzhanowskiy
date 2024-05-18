@@ -407,6 +407,7 @@ if __name__ == "__main__":
 
 " ----------------------------------------------------------------------------------- "
 
+"""
 import random
 import requests
 
@@ -446,11 +447,7 @@ for item in countries_flag:
 
 print(len(countries.keys()))
 print(countries.values())
-stats = {
-    "state": False,
-    "total_answers" : 0,
-    "correct_answers" : 0
-}
+user_stats = {}
 random_country_number = 1
 random_country = ""
 
@@ -476,22 +473,22 @@ async def process_help(message: Message):
     )
 
 async def process_reset(message: Message):
-    stats['total_answers'] = 0
-    stats['correct_answers'] = 0
+    user_stats[message.from_user.id]['total_answers'] = 0
+    user_stats[message.from_user.id]['correct_answers'] = 0
     await message.answer(
         text= "Your progress has been reset. Woho \\0/\n\n"
-              f"Общее кол-во ответов: {stats['total_answers']};\n"
-              f"Кол-во правильных ответов: {stats['correct_answers']}"
+              f"Общее кол-во ответов: {user_stats[message.from_user.id]['total_answers']};\n"
+              f"Кол-во правильных ответов: {user_stats[message.from_user.id]['correct_answers']}"
     )
 
 async def process_exit(message: Message):
-    if not stats['state']:
+    if not user_stats[message.from_user.id]['state']:
         await message.answer(
             text= f"{message.from_user.first_name} {message.from_user.last_name}, вы, на данный момент, игру не начинали, "
                   "но вы всегда можете ввести '/начать' для ее запуска"
         )
     else:
-        stats['state'] = False
+        user_stats[message.from_user.id]['state'] = False
         await message.answer(
             text= f"Выход из игры выполнен.\nВведите '/начать'"
         )
@@ -501,14 +498,20 @@ async def process_exit(message: Message):
 async def process_stats(message: Message):
     await message.answer(
         text= f"Статы:\n\n"
-              f"Общее кол-во ответов: {stats['total_answers']}\n"
-              f"Кол-во правильных ответов: {stats['correct_answers']}"
+              f"Общее кол-во ответов: {user_stats[message.from_user.id]['total_answers']}\n"
+              f"Кол-во правильных ответов: {user_stats[message.from_user.id]['correct_answers']}"
     )
 
 
 
 async def process_game_start(message: Message):
-    if stats['state']:
+    if message.from_user.id not in user_stats:
+        user_stats[message.from_user.id] = {
+            'state' : False,
+            'total_answers' : 0,
+            'correct_answers' : 0
+        }
+    if user_stats[message.from_user.id]['state']:
         inline_keyboard_markup = InlineKeyboardMarkup(
             inline_keyboard= [[
                 InlineKeyboardButton(
@@ -528,7 +531,7 @@ async def process_game_start(message: Message):
             reply_markup= inline_keyboard_markup
         )
     else:
-        stats['state'] = True
+        user_stats[message.from_user.id]['state'] = True
         global random_country_number
         random_country_number = random.randint(1, len(countries.keys()))
         global random_country
@@ -539,6 +542,7 @@ async def process_game_start(message: Message):
                   f"Осталось отгадать: {len(countries.keys())}\n\n"
                   "Введите на английском название столицы:"
         )
+    print("When Starting: ", user_stats)
 
 async def process_user_answer(message: Message):
     inline_keyboard_markup = InlineKeyboardMarkup(
@@ -554,27 +558,31 @@ async def process_user_answer(message: Message):
 
         ]]
     )
-    if message.text.lower() == countries[random_country]['capital'].lower():
-        stats['total_answers'] += 1
-        stats['correct_answers'] += 1
+    if (message.text.lower() == countries[random_country]['capital'].lower()) and (user_stats[message.from_user.id]['state']):
+        user_stats[message.from_user.id]['total_answers'] += 1
+        user_stats[message.from_user.id]['correct_answers'] += 1
         del countries[random_country]
         await message.answer(
             text= f"Верно!\n"
                   f"Столица {random_country} - {message.text.capitalize()}\n\n"
-                  f"Общее кол-во ответов: {stats['total_answers']}\n"
-                  f"Кол-во правильных ответов: {stats['correct_answers']}\n"
+                  f"Общее кол-во ответов: {user_stats[message.from_user.id]['total_answers']}\n"
+                  f"Кол-во правильных ответов: {user_stats[message.from_user.id]['correct_answers']}\n"
                   f"Выберите одно из следующих действий:",
             reply_markup= inline_keyboard_markup
         )
-    else:
-        stats['total_answers'] += 1
+    elif (message.text.lower() != countries[random_country]['capital'].lower()) and (user_stats[message.from_user.id]['state']):
+        user_stats[message.from_user.id]['total_answers'] += 1
         await message.answer(
             text=f"Не угадали :(\n"
                  f"Столица {random_country} - {countries[random_country]['capital']}\n\n"
-                 f"Общее кол-во ответов: {stats['total_answers']}\n"
-                 f"Кол-во правильных ответов: {stats['correct_answers']}\n"
+                 f"Общее кол-во ответов: {user_stats[message.from_user.id]['total_answers']}\n"
+                 f"Кол-во правильных ответов: {user_stats[message.from_user.id]['correct_answers']}\n"
                  f"Выберите одно из следующих действий:",
             reply_markup=inline_keyboard_markup
+        )
+    else:
+        await message.answer(
+            text= f"Вы вне игры. Нажмите '/начать' чтобы продолжить играть"
         )
 
 async def user_choice(callback: CallbackQuery):
@@ -583,16 +591,21 @@ async def user_choice(callback: CallbackQuery):
         random_country_number = random.randint(1, len(countries.keys()))
         global random_country
         random_country = list(countries.keys())[random_country_number - 1]
+        try:
+            flag_link = countries[random_country]['flag']
+        except KeyError:
+            flag_link = "N/A"
         await callback.message.edit_text(
             text= f"Страна: {random_country}\n"
-                  f"Флаг: {countries[random_country]['flag']}\n"
+                  f"Флаг: {flag_link}\n"
                   f"Осталось отгадать: {len(countries.keys())}\n\n"
                   "Введите на английском название столицы:"
         )
     elif callback.data == "exit":
-        stats['state'] = False
-        stats['total_answers'] = 0
-        stats['correct_answers'] = 0
+        user_stats[callback.from_user.id]['state'] = False
+        print("When exiting", user_stats, sep= ": ")
+        user_stats[callback.from_user.id]['total_answers'] = 0
+        user_stats[callback.from_user.id]['correct_answers'] = 0
         await callback.message.edit_text(
             text= f"Вы вышли из игры, а данные были сброшены\n"
                   f"Помните, что команда '/начать' ждет не дождется чтобы быть напечатанной"
@@ -603,29 +616,102 @@ async def user_choice(callback: CallbackQuery):
 
 dp.message.register(process_start, Command(commands= ["start"]))
 dp.message.register(process_help, Command(commands= ["правила"]))
-dp.message.register(process_reset, Command(commands=['сбросить']))
+dp.message.register(process_reset, Command(commands= ['сбросить']))
 dp.message.register(process_exit, Command(commands= ['выйти']))
 dp.message.register(process_stats, Command(commands= ["статистика"]))
-dp.message.register(process_game_start, Command(commands=["начать"]))
+dp.message.register(process_game_start, Command(commands= ["начать"]))
 dp.message.register(process_user_answer)
 dp.callback_query.register(user_choice)
 # dp.message.register(other_messages)
+"""
+
+
+" ----------------------------------------------------------------------------------- "
+
+# st = "яяяяяяяяяЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯЯ"
+# st2 = "яяя"
+# print(st.count("я"))
+#
+# anonymous_filter = lambda string: len([ya for ya in string if ya.lower() == "я"]) > 23
+# print(anonymous_filter('яяяяяяяяяяяяяяяяяяяяяяяя, яяяяяяяяяяяяяяяя и яяяяяяяя тоже!'))
+
+
+"""
+from aiogram import Dispatcher, Bot, F
+from aiogram.types import Message, Update
+from aiogram.filters import Command
+
+import json
+
+
+BOT_TOKEN = "7189166713:AAFplUTZndRgivPEkLAj9nQFfd0bHw2bibI"
+
+dp = Dispatcher()
+bot = Bot(token= BOT_TOKEN)
+
+
+
+# Checks if the message includes only the "/start" text
+def filter_start_command(message: Message):
+    return message.text == "/start"
+
+
+
+async def process_start(message: Message):
+    await message.answer(
+        text= f"Start command has been initiated"
+    )
+
+
+dp.message.register(process_start, lambda msg: msg.text == "/start")
+
+
+if __name__ == "__main__":
+    dp.run_polling(bot)
+"""
+
+
+" ----------------------------------------------------------------------------- "
+
+from aiogram import Dispatcher, Bot, F
+from aiogram.types import Message, ContentType
+from aiogram.filters import Command
+
+import json
+
+BOT_TOKEN = "7189166713:AAFplUTZndRgivPEkLAj9nQFfd0bHw2bibI"
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher()
+
+
+async def process_start(message: Message):
+    await message.answer(
+        text= f"Hi, Mr(s).{message.from_user.first_name}. You started the bot"
+    )
+
+
+async def process_photo(message: Message):
+    raw_json = message.json()
+    parsed_json = json.loads(raw_json)
+    processed_json = json.dumps(parsed_json, indent= 4)
+    print(processed_json)
+    await message.answer(
+        text= "Photo was received. I appreciate this kind gesture :=)"
+    )
+
+async def process_video_voice(message: Message):
+    await message.answer(
+        text="You forwarded a video or voice"
+    )
+
+dp.message.register(process_start, Command(commands=["start"]))
+dp.message.register(process_photo, F.content_type == ContentType.PHOTO)
+dp.message.register(process_video_voice, F.content_type.in_({
+    "video",
+    "voice"
+}))
 
 
 
 if __name__ == "__main__":
     dp.run_polling(bot)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
