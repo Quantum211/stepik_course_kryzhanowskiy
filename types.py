@@ -672,46 +672,271 @@ if __name__ == "__main__":
 
 
 " ----------------------------------------------------------------------------- "
+"""
+import json, typing
 
-from aiogram import Dispatcher, Bot, F
-from aiogram.types import Message, ContentType
-from aiogram.filters import Command
+# from aiogram import Dispatcher, Bot, F
+from aiogram.types import Message, ContentType, ChatMemberUpdated
+from aiogram.filters import Command, ChatMemberUpdatedFilter, MEMBER, KICKED, IS_MEMBER, IS_NOT_MEMBER
 
-import json
+
 
 BOT_TOKEN = "7189166713:AAFplUTZndRgivPEkLAj9nQFfd0bHw2bibI"
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 
-async def process_start(message: Message):
-    await message.answer(
-        text= f"Hi, Mr(s).{message.from_user.first_name}. You started the bot"
-    )
-
-
-async def process_photo(message: Message):
-    raw_json = message.json()
-    parsed_json = json.loads(raw_json)
+# @dp.my_chat_member(ChatMemberUpdatedFilter(member_status_changed= IS_MEMBER >> IS_NOT_MEMBER))
+async def bot_kicked(update: ChatMemberUpdated):
+    parsed_json = json.loads(update.json())
     processed_json = json.dumps(parsed_json, indent= 4)
-    print(processed_json)
+    print(processed_json, "Left", sep="\n")
+
+
+# @dp.my_chat_member(ChatMemberUpdatedFilter(member_status_changed= IS_NOT_MEMBER >> IS_MEMBER))
+async def bot_joined(event: ChatMemberUpdated):
+    parsed_json = json.loads(event.json())
+    processed_json = json.dumps(parsed_json, indent=4)
+    print(processed_json, "Joined", sep="\n")
+
+
+dp.my_chat_member.register(bot_kicked, ChatMemberUpdatedFilter(member_status_changed=IS_MEMBER >> IS_NOT_MEMBER))
+dp.my_chat_member.register(bot_joined, ChatMemberUpdatedFilter(member_status_changed= MEMBER))
+
+if __name__ == "__main__":
+    dp.run_polling(bot)
+"""
+
+#
+# my_telefram_data = {
+#     "id": 1600526965,
+#     "text": "HI! This message is sent from the search bar"
+# }
+#
+# async def process_start(message: Message):
+#     await message.answer(
+#         text= f"Hi, Mr(s).{message.from_user.first_name}. You started the bot with the default prefix '/'"
+#     )
+#     parsed_json = json.loads(message.json())
+#     processed_json = json.dumps(parsed_json, indent=4)
+#     print(processed_json)
+#
+# async def process_start_pipe(message: Message):
+#     await message.answer(
+#         text= f"Hi, Mr(s) {message.from_user.first_name}. You started the command with the custom prefix '|'"
+#     )
+#
+#
+# async def process_photo(message: Message):
+#     raw_json = message.json()
+#     parsed_json = json.loads(raw_json)
+#     processed_json = json.dumps(parsed_json, indent= 4)
+#     print(processed_json)
+#     await message.answer(
+#         text= "Photo was received. I appreciate this kind gesture :=)"
+#     )
+#
+# async def process_video_voice(message: Message):
+#     await message.answer(
+#         text="You forwarded a video or voice"
+#     )
+#
+# async def not_member(event: ChatMemberUpdated):
+#     parsed_json = json.loads(event.json())
+#     processed_json = json.dumps(parsed_json, indent=4)
+#     print(processed_json)
+#     print(f"User {event.from_user.first_name} blocked the bot")
+#
+# async def is_member(event: ChatMemberUpdated):
+#     parsed_json = json.loads(event.json())
+#     processed_json = json.dumps(parsed_json, indent=4)
+#     print(processed_json)
+#
+#
+#
+# async def other(message: Message):
+#     parsed_json = json.loads(message.json())
+#     processed_json = json.dumps(parsed_json, indent=4)
+#     print(processed_json)
+#
+# dp.message.register(process_start, Command(commands=["start"]))
+# dp.message.register(process_start_pipe, Command(commands=["start"], prefix="|"))
+# dp.message.register(process_photo, F.content_type == ContentType.PHOTO)
+# dp.message.register(process_video_voice, F.content_type.in_({
+#     "video",
+#     "voice"
+# }))
+# dp.chat_member.register(not_member, ChatMemberUpdatedFilter(member_status_changed=KICKED))
+# dp.chat_member.register(is_member, ChatMemberUpdatedFilter(IS_NOT_MEMBER >> IS_MEMBER))
+# dp.message.register(other)
+
+# if __name__ == "__main__":
+#     dp.run_polling(bot)
+
+
+
+" ----------------------------------------------------------------------------------------- "
+"""
+# class MyClass():
+#     def __init__(self) -> None:
+#         self.name = "Aly"
+#         pass
+#
+#     def __call__(self):
+#         return "Result of calling the instance of MyClass ^_^"
+#
+# class1 = MyClass()
+# class2 = MyClass()
+# class3 = MyClass
+#
+#
+# print(MyClass()())
+# print(class1())
+# print(class2)
+
+
+from aiogram import Bot, Dispatcher, F
+from aiogram.types import Message
+from aiogram.filters import BaseFilter
+
+TOKEN = "7189166713:AAFplUTZndRgivPEkLAj9nQFfd0bHw2bibI"
+bot = Bot(token= TOKEN)
+dp = Dispatcher()
+admin_ids = [1600526965]
+
+
+class IsAdmin(BaseFilter):
+    def __init__(self, admin_ids: list[int]) -> None:
+        self.admin_ids = admin_ids
+
+    async def __call__(self, message: Message) -> bool:
+        return message.from_user.id in self.admin_ids
+
+
+# @dp.message(IsAdmin(admin_ids))
+async def greet_admin(message: Message):
     await message.answer(
-        text= "Photo was received. I appreciate this kind gesture :=)"
+        text= f"Hi, {message.from_user.first_name}. You've passed an admin test"
     )
 
-async def process_video_voice(message: Message):
+# @dp.message()
+async def greet_user(message: Message):
     await message.answer(
-        text="You forwarded a video or voice"
+        text= f"Hi, {message.from_user.first_name}. Any plans for today?"
     )
 
-dp.message.register(process_start, Command(commands=["start"]))
-dp.message.register(process_photo, F.content_type == ContentType.PHOTO)
-dp.message.register(process_video_voice, F.content_type.in_({
-    "video",
-    "voice"
-}))
+dp.message.register(greet_admin, IsAdmin(admin_ids))
+dp.message.register(greet_user)
+
+
+if __name__ == "__main__":
+    dp.run_polling(bot)
+"""
+
+" ---------------------------------------------------------------------------------------------------- "
+
+# text = "hwiefunwi....wieowi.".replace(".", "")
+# print(text)
+#
+# text2 = "3".isdigit()
+# print(text2)
+#
+# print(float("32.4"))
+# print("32.3".isdigit())
+
+from aiogram import Bot, Dispatcher, F
+from aiogram.filters import BaseFilter, CommandStart
+from aiogram.types import Message
+
+
+
+TOKEN = "7189166713:AAFplUTZndRgivPEkLAj9nQFfd0bHw2bibI"
+bot = Bot(token=TOKEN)
+dp = Dispatcher()
+
+
+class IsDigit(BaseFilter):
+    async def __call__(self, message: Message) -> bool | dict[str, list[int]]:
+
+        words = message.text.split()
+        processed_words = []
+        for word in words:
+            processed_words.append(word.strip().replace(",", "").replace(".", ""))
+        else:
+            if processed_words:
+                numbers = []
+                for word in processed_words:
+                    if word.isdigit():
+                        numbers.append(int(word))
+                return {"numbers" : numbers}
+            return False
+
+class IsEven(BaseFilter):
+    async def __call__(self, message: Message, numbers) -> bool | dict[str, list[str]]:
+        if not numbers:
+            return False
+        even_numbers = []
+        for number in numbers:
+            if number % 2 == 0:
+                even_numbers.append(str(number))
+        else:
+            if even_numbers:
+                print(even_numbers)
+                return {"numbers" : even_numbers}
+            return False
+
+@dp.message(
+            F.text,
+            IsDigit(),
+            IsEven())
+async def process_display_numbers(message: Message, numbers):
+    print(numbers)
+    await message.answer(
+        text= f"Here are you numbers: {', '.join([str(num) for num in numbers])}"
+    )
+
+
+
+
+
+# message = "anijq qiwdnq jsd 8 211 902921, 9, sdmosf."
+# class GetNumbers(BaseFilter):
+#     async def __call__(self, message: Message) -> bool | dict[str, list[int]]:
+#         words = message.text.replace(",", "").replace(".", "").split()
+#         numbers = [int(num.strip()) for num in words if num.isdigit()]
+#         if numbers:
+#             return {"numbers" : numbers, "letters" : "abcdefghijklmnopqrstuvwxyz"}
+#         return False
+#
+# @dp.message(F.text.lower().startswith("find numbers"), GetNumbers())
+# async def choose_numbers(message: Message, numbers, letters):
+#     await message.answer(
+#         text= f"Здесь ваши числа: {', '.join([str(num) for num in numbers])}\n"
+#               f"Here are your letters: {letters}"
+#     )
+
+
 
 
 
 if __name__ == "__main__":
     dp.run_polling(bot)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
